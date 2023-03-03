@@ -236,6 +236,6 @@ $ sudo systemctl restart zabbix-agent
 $ sudo systemctl status zabbix-agent
 ```
 <img src="pictures/Zabbix-Configuration-Add-host.png?raw=true" width="900">
-<img src="pictures/Zabbix-hosts.png.png?raw=true" width="900">
+<img src="pictures/Zabbix-hosts.png?raw=true" width="900">
 <img src="pictures/Zabbix-node1-system-performance.png?raw=true" width="900">
 
