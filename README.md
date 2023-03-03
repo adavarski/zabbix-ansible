@@ -261,7 +261,7 @@ xx.xx.xx.xx ansible_ssh_private_key_file=/Path-Dir/key.pem ansible_user=vagrant
 | porta_agent | port agent | 10050 |
 
 ### Important
- One or both of **zabbix_agent_install**(DEFAULT) and **zabbix_agent2_install** variables must be selected changing to **True** for the installation process to take place, entering both will install both types on different ports if you want to update only agent version, use **zabbix_agent_update** or **zabbix_agent2_update** variables:
+ One or both of zabbix_agent_install(DEFAULT) and zabbix_agent2_install variables must be selected changing to True for the installation process to take place, entering both will install both types on different ports if you want to update only agent version, use zabbix_agent_updat or zabbix_agent2_update variables:
   
   - 10050: **zabbix-agent** 
   - 10052: **zabbix-agent2**  
