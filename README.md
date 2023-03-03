@@ -215,7 +215,7 @@ $ vagrant ssh
 [root@almalinux-srv etc]# systemctl restart zabbix-server
 [root@almalinux-srv etc]# systemctl status zabbix-server
 
-
+$ ansible-playbook -i inventory -l zabbix-agents playbook-zabbix-agent.yml --extra-vars "zabbix_agent_update=True zabbix_version=6.0 zabbix_server_ip=192.168.33.12"
 $ diff /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.ORIG
 102c102
 < Server=192.168.33.12, 127.0.0.1, 192.168.1.100
