@@ -1,0 +1,27 @@
+---
+- name: Configure global settings.
+  lineinfile:
+    dest: "{{ postgresql_config_path }}/postgresql.conf"
+    regexp: "#shared_preload_libraries = ''"
+    line: "shared_preload_libraries = 'timescaledb'"
+    state: "{{ item.state | default('present') }}"
+    mode:  0600
+  notify: restart postgresql
+  
+- name: Configure global settings.
+  lineinfile:
+    dest: "{{ postgresql_config_path }}/postgresql.conf"
+    regexp: "#listen_addresses = 'localhost'"
+    line: "listen_addresses = '*'"
+    state: "{{ item.state | default('present') }}"
+    mode: 0600
+  notify: restart postgresql
+
+- name: Configure host based authentication
+  template:
+    src: "pg_hba.conf.j2"
+    dest: "{{ postgresql_config_path }}/pg_hba.conf"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+  notify: restart postgresql

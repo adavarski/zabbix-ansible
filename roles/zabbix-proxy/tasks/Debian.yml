@@ -1,0 +1,166 @@
+---
+- name: Set some fact
+  set_fact:
+    zabbix_short_version: "{{ zabbix_version | regex_replace('\\.', '') }}"
+
+- name: "Debian | Set facts for Zabbix <= 5.2"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-proxy-{{ zabbix_proxy_database }}"
+  when:
+    - zabbix_version is version_compare('5.2', '<=')
+
+- name: "Debian | Set facts for Zabbix >= 5.4"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-sql-scripts/{{ zabbix_proxy_database }}"
+  when:
+    - zabbix_version is version_compare('5.4', '>=')
+
+- name: Only run update
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Add an Apt signing key mysql
+  apt_key:
+    url: https://mariadb.org/mariadb_release_signing_key.asc
+    state: present
+  when:
+    - zabbix_database_creation == "mysql" and zabbix_database_sqlload == "mysql"
+
+- name: Install repo mysql
+  apt_repository:
+    repo: "deb [arch=amd64,arm64,ppc64el] https://mariadb.mirror.liquidtelecom.com/repo/10.5/ubuntu {{ ansible_distribution_release }} main"
+    state: present
+    update_cache: yes
+  when: 
+   - zabbix_database_creation == "mysql" and zabbix_database_sqlload == "mysql"
+   - ansible_distribution == "Ubuntu"
+
+- name: Install mariadb-server
+  apt:
+    name: 
+        - mariadb-server
+  when:
+    - zabbix_database_creation == "mysql" and zabbix_database_sqlload == "mysql"      
+
+- name: Make sure mariadb service is running
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes
+  when:
+    - zabbix_database_creation == "mysql" and zabbix_database_sqlload == "mysql"    
+
+- name: Add an Apt signing key zabbix
+  apt_key:
+    url: http://repo.zabbix.com/zabbix-official-repo.key
+    state: present
+
+- name: Install repo zabbix
+  apt_repository:
+    repo: "{{ item }} https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu {{ ansible_distribution_release }} main"
+    state: present
+  when: 
+   - zabbix_repo == "zabbix"
+   - ansible_distribution == "Ubuntu"
+  with_items:
+    - deb-src
+    - deb
+
+- name: Install repo zabbix
+  apt_repository:
+    repo: "{{ item }} https://repo.zabbix.com/zabbix/{{ zabbix_version }}/debian {{ ansible_distribution_release }} main"
+    state: present
+  when: 
+   - zabbix_repo == "zabbix"
+   - ansible_distribution == "Debian"
+  with_items:
+    - deb-src
+    - deb
+
+- name: Install Zabbix packeges
+  apt:
+    name: "{{ packeges }}"
+  vars:
+    packeges:
+    - zabbix-proxy-{{ zabbix_proxy_database }}
+    - zabbix-agent
+  when: zabbix_version is version_compare('5.2', '<=')
+
+- name: Install Zabbix packeges
+  apt:
+    name: "{{ packeges }}"
+  vars:
+    packeges:
+    - zabbix-sql-scripts
+    - zabbix-proxy-{{ zabbix_proxy_database }}
+    - zabbix-agent
+  when: zabbix_version is version_compare('5.4', '>=')
+
+- name: Install packages dependencies
+  apt:
+    name:
+        - python3
+        - python3-pip
+    state: present
+
+- name: Install pip packages
+  pip:
+    name:
+        - pymysql
+    executable: pip3
+
+#- name: MariaDB | Create a new pass for zabbix user
+#  command: openssl rand -base64 8
+#  register: mysql_zabbix_pass
+#  when:
+#    - zabbix_database_creation or zabbix_database_sqlload
+#    - zabbix_proxy_database == 'mysql'
+#
+#- name: MariaDB | Display new pass in playbook output
+#  debug:
+#      msg: "New zabbix pass: {{mysql_zabbix_pass.stdout}}"
+#  when: 
+#    - mysql_zabbix_pass.changed
+#    - zabbix_database_creation or zabbix_database_sqlload
+#    - zabbix_proxy_database == 'mysql'
+
+- name: MariaDB | Change root pass
+  mysql_user: 
+     name: root 
+     host: "{{ item }}" 
+     password: "{{ mysql_root_pass }}" 
+     login_unix_socket: /var/run/mysqld/mysqld.sock 
+  with_items:
+      - 127.0.0.1
+      - ::1
+      - localhost
+  when: 
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+  ignore_errors: true
+
+- name: MariaDB | Publish file .my.cnf in the root home
+  template:
+      src: user.root.my.cnf.j2
+      dest: /root/.my.cnf
+  when: 
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+
+- name: Make sure zabbix-agent service is running
+  systemd:
+    name: zabbix-agent
+    state: started
+    enabled: yes
+
+- name: Copy zabbix_proxy.conf template 
+  template:
+    src: zabbix_proxy.conf.j2
+    dest: /etc/zabbix/zabbix_proxy.conf
+
+- name: Copy zabbix_agent.conf template 
+  template:
+    src: zabbix_agentd.conf.j2
+    dest: /etc/zabbix/zabbix_agentd.conf
+  notify: start zabbix agent

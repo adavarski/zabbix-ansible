@@ -1,0 +1,17 @@
+mysql_databases:
+  - name: "{{ zabbix_proxy_dbname }}"
+    login_password: "{{ mysql_root_pass }}"
+    encoding: utf8
+    collation: utf8_bin
+mysql_users:
+  - login_password: "{{ mysql_root_pass }}"
+    name: "{{ zbx_database_user }}"
+    password: "{{ mysql_zabbix_pass }}"
+    priv: "{{ zabbix_proxy_dbname }}.*:ALL"
+mysql_root_users:
+  - login_user: root
+    login_password: "" 
+    name: "{{ mysql_root_username }}"
+    password: "{{ mysql_root_pass }}"
+    host: "{{ zbx_user_privileges }}"
+    priv: "*.*:ALL,GRANT"

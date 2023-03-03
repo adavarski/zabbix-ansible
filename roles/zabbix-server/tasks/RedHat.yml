@@ -1,0 +1,157 @@
+- name: Set some fact
+  set_fact:
+    zabbix_short_version: "{{ zabbix_version | regex_replace('\\.', '') }}"
+
+- name: Disable SELinux
+  selinux:
+    state: disabled
+  ignore_errors: true
+    
+- name: Install packages
+  yum:
+    name:
+        - epel-release
+        - vim
+        - wget
+        - openssl
+        - python3
+        - python3-pip
+    state: present
+
+- name: Update pip packages
+  pip:
+    name:
+        - setuptools
+        - pip
+    state: latest
+
+- name: Install MySQL-client
+  yum:
+    name: mysql
+    state: present
+  when:
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'mysql'
+
+- name: Install postgresql-client
+  yum:
+    name: postgresql
+    state: present
+  when:
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'pgsql'
+
+- name: Install pip packages
+  pip:
+    name:
+        - pymysql
+
+- name: Install pip packages
+  pip:
+    name:
+        - psycopg2
+
+- name: "RedHat | Set facts for Zabbix <= 5.2"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-server-{{ zabbix_server_database }}*"
+  when:
+    - zabbix_version is version_compare('5.2', '<=')
+  
+- name: "RedHat mysql| Set facts for Zabbix = 5.4"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-sql-scripts/{{ zabbix_server_database }}"
+  when:
+    - zabbix_version is version_compare('5.4', '=')
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'mysql'
+
+- name: "RedHat mysql| Set facts for Zabbix >= 6.0"
+  set_fact:
+    datafiles_path: "/usr/share/zabbix-sql-scripts/{{ zabbix_server_database }}"
+  when:
+    - zabbix_version is version_compare('6.0', '>=')
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'mysql'
+
+- name: "RedHat pgsql| Set facts for Zabbix = 5.4"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-sql-scripts/{{ zabbix_database_postgresql }}"
+  when:
+    - zabbix_version is version_compare('5.4', '=')
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'pgsql'
+
+- name: "RedHat pgsql| Set facts for Zabbix >= 6.0"
+  set_fact:
+    datafiles_path: "/usr/share/zabbix-sql-scripts/{{ zabbix_database_postgresql }}"
+  when:
+    - zabbix_version is version_compare('6.0', '>=')
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'pgsql'
+
+- name: Install Zabbix Repo.
+  yum_repository:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    baseurl: "{{ item.baseurl }}"
+    gpgcheck: "{{ item.gpgcheck }}"
+    gpgkey: "{{ item.gpgkey }}"
+    state: "{{ item.state | default('present') }}"
+  with_items: "{{ zabbix_repo_yum }}"
+
+- name: Update Package Cache
+  yum:
+    name: '*' 
+    state: latest 
+    update_cache: true
+
+- name: Install Zabbix packeges
+  yum:
+    name: "{{ packeges }}"
+  vars:
+    packeges:
+    - zabbix-server-{{ zabbix_server_database }}
+    - zabbix-agent
+  when: zabbix_version is version_compare('5.2', '<=')
+
+- name: Install Zabbix packeges
+  yum:
+    name: "{{ packeges }}"
+  vars:
+    packeges:
+    - zabbix-sql-scripts
+    - zabbix-server-{{ zabbix_server_database }}
+    - zabbix-agent
+  when: zabbix_version is version_compare('5.4', '>=')
+
+- name: Make sure zabbix-agent service is running
+  systemd:
+    name: zabbix-agent
+    state: started
+    enabled: yes
+
+- name: Make sure zabbix-server service is running
+  systemd:
+    name: zabbix-server-mysql
+    state: started
+    enabled: yes   
+
+- name: Copy zabbix_server.conf template 
+  template:
+    src: templates/zabbix_server.conf.44.j2
+    dest: /etc/zabbix/zabbix_server.conf
+  notify: restart zabbix-server
+  when: zabbix_version is version_compare('5.4', '<=')
+
+- name: Copy zabbix_server.conf template v6
+  template:
+    src: templates/zabbix_server.conf.60.j2
+    dest: /etc/zabbix/zabbix_server.conf
+  notify: restart zabbix-server
+  when: zabbix_version is version_compare('6.0', '>=')
+
+- name: Copy zabbix_agent.conf template 
+  template:
+    src: templates/zabbix_agentd.conf.44.j2
+    dest: /etc/zabbix/zabbix_agentd.conf
+  notify: restart zabbix-agent

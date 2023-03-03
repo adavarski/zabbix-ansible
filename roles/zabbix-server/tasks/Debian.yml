@@ -1,0 +1,154 @@
+---
+- name: Set some fact
+  set_fact:
+    zabbix_short_version: "{{ zabbix_version | regex_replace('\\.', '') }}"
+
+- name: "Debian | Set facts for Zabbix <= 5.0"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-server-{{ zabbix_server_database }}"
+  when:
+    - zabbix_version is version_compare('5.2', '<=')
+
+- name: "Debian mysql | Set facts for Zabbix = 5.4"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-sql-scripts/{{ zabbix_server_database }}"
+  when:
+    - zabbix_version is version_compare('5.4', '=')
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'mysql'
+
+- name: "Debian mysql| Set facts for Zabbix >= 6.0"
+  set_fact:
+    datafiles_path: "/usr/share/zabbix-sql-scripts/{{ zabbix_server_database }}"
+  when:
+    - zabbix_version is version_compare('6.0', '>=')
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'mysql'
+
+- name: "Debian pgsql | Set facts for Zabbix = 5.4"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-sql-scripts/{{ zabbix_database_postgresql }}"
+  when:
+    - zabbix_version is version_compare('5.4', '=')
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'pgsql'
+
+- name: "Debian pgsql| Set facts for Zabbix >= 6.0"
+  set_fact:
+    datafiles_path: "/usr/share/zabbix-sql-scripts/{{ zabbix_database_postgresql }}"
+  when:
+    - zabbix_version is version_compare('6.0', '>=')
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'pgsql'
+
+- name: Only run update
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Install postgresql-client
+  apt:
+    name: postgresql
+    state: present
+  when:
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_server_database == 'pgsql'
+
+- name: Add an Apt signing key zabbix
+  apt_key:
+    url: http://repo.zabbix.com/zabbix-official-repo.key
+    state: present
+
+- name: Install repo zabbix
+  apt_repository:
+    repo: "{{ item }} https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu {{ ansible_distribution_release }} main"
+    state: present
+  when: 
+   - zabbix_repo == "zabbix"
+   - ansible_distribution == "Ubuntu"
+  with_items:
+    - deb-src
+    - deb
+
+- name: Install repo zabbix
+  apt_repository:
+    repo: "{{ item }} https://repo.zabbix.com/zabbix/{{ zabbix_version }}/debian {{ ansible_distribution_release }} main"
+    state: present
+  when: 
+   - zabbix_repo == "zabbix"
+   - ansible_distribution == "Debian"
+  with_items:
+    - deb-src
+    - deb
+
+- name: Install Zabbix packeges
+  apt:
+    name: "{{ packeges }}"
+  vars:
+    packeges:
+    - zabbix-server-{{ zabbix_server_database }}
+    - zabbix-agent
+  when: zabbix_version is version_compare('5.2', '<=')
+
+- name: Install Zabbix packeges
+  apt:
+    name: "{{ packeges }}"
+  vars:
+    packeges:
+    - zabbix-sql-scripts
+    - zabbix-server-{{ zabbix_server_database }}
+    - zabbix-agent
+  when: zabbix_version is version_compare('5.4', '>=')
+
+- name: Install packages dependencies
+  apt:
+    name:
+        - net-tools
+        - python3-pip
+        - libpq-dev
+        - python3-dev
+        - python3
+    state: present
+
+- name: Install pip packages
+  pip:
+    name:
+        - pymysql
+    executable: pip3
+
+- name: Install pip packages
+  pip:
+    name:
+        - psycopg2
+
+- name: Make sure zabbix-agent service is running
+  systemd:
+    name: zabbix-agent
+    state: started
+    enabled: yes
+
+- name: Copy zabbix_server.conf template 
+  template:
+    src: zabbix_server.conf.44.j2
+    dest: /etc/zabbix/zabbix_server.conf
+  notify: restart zabbix-server
+  when: zabbix_version is version_compare('5.4', '<=')
+
+- name: Copy zabbix_server.conf template v6
+  template:
+    src: templates/zabbix_server.conf.60.j2
+    dest: /etc/zabbix/zabbix_server.conf
+  notify: restart zabbix-server
+  when: zabbix_version is version_compare('6.0', '>=')
+
+- name: Copy zabbix_agent.conf template 
+  template:
+    src: zabbix_agentd.conf.44.j2
+    dest: /etc/zabbix/zabbix_agentd.conf
+  notify: restart zabbix-agent
+
+- name: Stop zabbix-server
+  systemd:
+    name: zabbix-server
+    state: stopped
+  

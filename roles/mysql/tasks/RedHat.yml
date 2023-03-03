@@ -1,0 +1,71 @@
+- name: Disable SELinux
+  selinux:
+    state: disabled
+  ignore_errors: true
+    
+- name: Install packages
+  yum:
+    name:
+        - epel-release
+        - net-tools
+        - openssl
+        - telnet
+        - python3
+        - python3-pip
+    state: present
+
+- name: Install pip packages
+  pip:
+    name:
+        - pymysql
+ 
+- name: Install MySQL server
+  yum:
+    name: mysql-server
+    state: present
+
+- name: Start MySQL and enable on boot
+  service:
+    name: mysqld
+    state: started
+    enabled: yes
+
+- name: Mysql-server.cnf
+  template:
+      src: mysql-server.cnf.j2
+      dest: /etc/my.cnf.d/mysql-server.cnf
+      owner: root
+      mode: 0644
+      force: yes
+
+- name: Restart MySQL
+  service:
+    name: mysqld
+    state: restarted
+    
+- name: Create Zabbix server MySQL user
+  mysql_user:
+    login_host: "{{ zbx_database_address }}"
+    login_user: "{{ mysql_root_username }}"
+    login_password: ""
+    name: "{{ zbx_database_name }}"
+    host: "{{ item }}"
+    password: "{{ db_zabbix_pass }}"
+    priv: "{{ zbx_database_name }}.*:ALL"
+    state: present
+  with_items: 
+    - localhost
+    - "{{ zbx_server_address }}"
+    - "{{ zbx_front_address }}"
+    - "{{ zbx_server_ip_ha }}"
+  no_log: true
+
+- name: Create a new database for Zabbix Server
+  mysql_db:
+    name: "{{ zbx_database_name }}"
+    collation: utf8_bin
+    encoding: utf8
+    state: present
+    login_host: "{{ zbx_database_address }}"
+    login_user: "{{ mysql_root_username }}"
+    login_password: ""

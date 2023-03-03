@@ -1,0 +1,60 @@
+---
+# Variable configuration.
+- name: Include OS-specific variables (Debian).
+  include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+  when: ansible_distribution_file_variety == 'Debian'
+
+- name: Include OS-specific variables (RedHat).
+  include_vars: "{{ ansible_distribution_file_variety }}.yml"
+  when: ansible_distribution_file_variety == 'RedHat'
+
+- name: Define timescaledb_repo
+  set_fact:
+    timescaledb_repo: "{{ __timescaledb_repo }}"
+  when: timescaledb_repo is not defined and ansible_distribution == 'Debian' and ansible_distribution == 'Ubuntu'
+
+- name: Define postgresql_repo
+  set_fact:
+    postgresql_repo: "{{ __postgresql_repo }}"
+  when: 
+   - postgresql_repo is not defined
+   - ansible_distribution == 'Debian'
+
+- name: Define postgresql_key_time.
+  set_fact:
+    postgresql_key_time: "{{ __postgresql_key_time }}"
+  when: 
+   - postgresql_repo is not defined
+   - ansible_distribution == 'Debian'
+
+- name: Define postgresql_key.
+  set_fact:
+    postgresql_key: "{{ __postgresql_key }}"
+  when: 
+   - postgresql_repo is not defined
+   - ansible_distribution == 'Debian'
+
+- name: Define postgresql_version.
+  set_fact:
+    postgresql_version: "{{ __postgresql_version }}"
+  when: postgresql_version is not defined
+
+- name: Define postgresql_daemon.
+  set_fact:
+    postgresql_daemon: "{{ __postgresql_daemon }}"
+  when: postgresql_daemon is not defined
+
+- name: Define postgresql_data_dir.
+  set_fact:
+    postgresql_data_dir: "{{ __postgresql_data_dir }}"
+  when: postgresql_data_dir is not defined
+
+- name: Define postgresql_bin_path.
+  set_fact:
+    postgresql_bin_path: "{{ __postgresql_bin_path }}"
+  when: postgresql_bin_path is not defined
+
+- name: Define postgresql_config_path.
+  set_fact:
+    postgresql_config_path: "{{ __postgresql_config_path }}"
+  when: postgresql_config_path is not defined

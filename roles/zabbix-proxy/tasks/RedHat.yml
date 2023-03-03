@@ -1,0 +1,229 @@
+---
+- name: Set some fact
+  set_fact:
+    zabbix_short_version: "{{ zabbix_version | regex_replace('\\.', '') }}"
+
+- name: Upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+
+- name: Install packages dependencies
+  yum:
+    name:
+        - epel-release
+        - net-tools
+        - vim
+        - telnet
+        - python3
+        - python3-pip
+        - sqlite
+    state: present
+    
+- name: Disable SELinux
+  selinux:
+      state: disabled
+  ignore_errors: true
+
+- name: "RedHat | Set facts for Zabbix <= 5.0"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-proxy-{{ zabbix_proxy_database }}*"
+  when:
+    - zabbix_version is version_compare('5.0', '<=')
+    - ansible_distribution_major_version == '7'
+  tags:
+    - zabbix-proxy
+  
+- name: "RedHat | Set facts for Zabbix <= 5.2"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-proxy-{{ zabbix_proxy_database }}"
+  when:
+    - zabbix_version is version_compare('5.2', '<=')
+    - ansible_distribution_major_version == '8'
+  tags:
+    - zabbix-proxy
+  
+- name: "RedHat | Set facts for Zabbix >= 5.4"
+  set_fact:
+    datafiles_path: "/usr/share/doc/zabbix-sql-scripts/{{ zabbix_proxy_database }}"
+  when:
+    - zabbix_version is version_compare('5.4', '>=')
+  tags:
+    - zabbix-proxy
+
+- name: Install Zabbix Repo.
+  yum_repository:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    baseurl: "{{ item.baseurl }}"
+    gpgcheck: "{{ item.gpgcheck }}"
+    gpgkey: "{{ item.gpgkey }}"
+    state: "{{ item.state | default('present') }}"
+  with_items: "{{ zabbix_repo_yum }}"
+
+- name: Install Zabbix packeges
+  yum:
+    name: "{{ packeges }}"
+  vars:
+    packeges:
+    - zabbix-proxy-{{ zabbix_proxy_database }}
+    - zabbix-agent
+  when: zabbix_version is version_compare('5.2', '<=')
+
+- name: Install Zabbix packeges
+  yum:
+    name: "{{ packeges }}"
+  vars:
+    packeges:
+    - zabbix-sql-scripts
+    - zabbix-proxy-{{ zabbix_proxy_database }}
+    - zabbix-agent
+  when: zabbix_version is version_compare('5.4', '>=')
+
+- name: Install repo MySQL
+  yum:
+    name: "{{ mysql_repo }}"
+    state: latest
+  when:
+    - ansible_distribution_major_version == '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+
+- name: "RedHat | Install Mysql"
+  yum:
+    name: 
+        - mysql-server
+        - MySQL-python
+    state: present
+  when:
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+    - ansible_distribution_major_version == '7'
+
+- name: Start MySQL and enable on boot
+  service:
+    name: mysqld
+    state: started
+    enabled: yes
+  when:
+    - ansible_distribution_major_version == '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+
+- name: Find MySQL temporary password 
+  shell: "grep temporary.*root@localhost /var/log/mysqld.log | sed 's/.*root@localhost: //' | tail -n 1"
+  register: mysql_root_password_temp
+  when:
+    - ansible_distribution_major_version == '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+
+- name: Debug MySQL temporary password
+  debug: 
+    msg: "{{ mysql_root_password_temp.stdout }}"
+  when:
+    - ansible_distribution_major_version == '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql' 
+
+- name: Set new password from temporary password
+  shell: 'mysql -e "SET PASSWORD = PASSWORD(''{{ mysql_root_pass }}'');" --connect-expired-password -uroot -p"{{ mysql_root_password_temp.stdout }}"'
+  when: 
+    - ansible_distribution_major_version == '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+  ignore_errors: true
+
+- name: Install pip packages
+  pip:
+    name:
+        - pymysql
+  when:
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+    - ansible_distribution_major_version == '8' 
+
+- name: Install python packages
+  yum:
+    name:
+        - python
+        - python-pip
+    state: present
+  when:
+    - ansible_distribution_major_version == '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+
+- name: Install pip packages
+  pip:
+    name:
+        - pymysql
+    executable: pip3
+  when:
+    - ansible_distribution_major_version == '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+
+- name: "RedHat | Install Mysql"
+  yum:
+    name: mysql-server
+    state: present
+  when:
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+    - ansible_distribution_major_version != '7'
+
+- name: Make sure mysql service is running
+  systemd:
+    name: mysqld
+    state: started
+    enabled: yes
+  when:
+    - ansible_distribution_major_version != '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+
+- name: Make sure zabbix-agent service is running
+  systemd:
+    name: zabbix-agent
+    state: started
+    enabled: yes
+
+- name: Copy zabbix_proxy.conf template 
+  template:
+    src: zabbix_proxy.conf.j2
+    dest: /etc/zabbix/zabbix_proxy.conf
+
+- name: Copy zabbix_agent.conf template 
+  template:
+    src: zabbix_agentd.conf.j2
+    dest: /etc/zabbix/zabbix_agentd.conf
+  notify: start zabbix agent
+
+- name: Set Mysql root Password
+  mysql_user:
+    name: "{{ item.name }}"
+    host: "{{ item.host | default('localhost') }}"
+    password: "{{ item.password }}"
+    priv: "{{ item.priv | default('priv: *.*:USAGE') }}"
+    state: "{{ item.state | default('present') }}"
+    append_privs: "{{ item.append_privs | default('no') }}"
+    encrypted: "{{ item.encrypted | default('no') }}"
+  with_items: "{{ mysql_root_users }}"
+  when: 
+    - ansible_distribution_major_version != '7'
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql'
+  no_log: true
+  ignore_errors: true
+
+- name: Create `/root/.my.cnf`  with root password credentials
+  template:
+    src:  user.root.my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    mode: 0600
+    force: yes
+  when:
+    - zabbix_database_creation or zabbix_database_sqlload
+    - zabbix_proxy_database == 'mysql' 

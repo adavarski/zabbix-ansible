@@ -1,0 +1,36 @@
+zabbix_version: 4.4
+zbx_database_name: zabbix
+zbx_database_user: zabbix
+zbx_database_address: localhost
+zbx_server_address: localhost
+db_zabbix_pass: Tg0z64OVNzFwNA==
+zabbix_server_ha: disable
+#####Adicionado repo zabbix
+zabbix_repo: zabbix
+zabbix_repo_yum:
+  - name: zabbix
+    description: Zabbix Official Repository - $basearch
+    baseurl: http://repo.zabbix.com/zabbix/{{ zabbix_version }}/rhel/{{ ansible_distribution_major_version }}/$basearch/
+    enabled: 1 
+    gpgcheck: 0
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX
+    state: present
+  - name: zabbix-supported
+    description: Zabbix Official Repository non-supported - $basearch
+    baseurl: http://repo.zabbix.com/non-supported/rhel/{{ ansible_distribution_major_version }}/$basearch/
+    enabled: 1 
+    gpgcheck: 0
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX
+    state: present    
+# Zabbix Server parameters
+zbx_start_pollers: 10
+zbx_start_pollersunreachable: 10
+zbx_start_trappers: 10
+zbx_start_pingers: 10
+zbx_timeout: 30
+zbx_cache_size: 256M
+zbx_value_cache_size: 256M
+# Frontend parameters
+time_zone: America/Sao_Paulo
+# Database
+zabbix_server_database: mysql # mysql or pgsql

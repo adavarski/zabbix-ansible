@@ -1,0 +1,103 @@
+- name: Only run update
+  apt:
+    update_cache: yes
+
+- name: Install packages dependencies
+  apt:
+    name:
+        - net-tools
+        - vim
+        - wget
+        - python3
+        - python3-pip
+    state: present
+
+- name: Add an Apt signing key mysql
+  apt_key:
+    url: https://mariadb.org/mariadb_release_signing_key.asc
+    state: present
+
+- name: Install repo mysql
+  apt_repository:
+    repo: "{{ item }} [arch=amd64,arm64,ppc64el] https://mariadb.mirror.liquidtelecom.com/repo/10.5/ubuntu {{ ansible_distribution_release }} main"
+    state: present
+    update_cache: yes
+  when: 
+   - mysql_repo == "mysql"
+   - ansible_distribution == "Ubuntu" and ansible_distribution_major_version <= '20'
+  with_items:
+    - deb-src
+    - deb
+
+- name: Install mariadb-server
+  apt:
+    name: 
+        - mariadb-server
+
+- name: Make sure mariadb service is running
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes  
+
+- name: Install pip packages
+  pip:
+    name:
+        - pymysql
+    executable: pip3
+
+- name: MariaDB | Publish file .my.cnf in the root home
+  template:
+      src: user.root.my.cnf.j2
+      dest: /root/.my.cnf
+      owner: root
+      mode: 0600
+      force: no
+
+- name: Configure my.cnf settings.
+  lineinfile:
+    dest: "/etc/mysql/mariadb.conf.d/50-server.cnf"
+    line: "bind-address = 0.0.0.0"
+    state: present
+  notify: restart mariadb
+
+- name: Set Mysql root Password
+  mysql_user:
+    name: "{{ item.name }}"
+    host: "{{ item.host | default('localhost') }}"
+    password: "{{ item.password }}"
+    login_unix_socket: "{{ item.login_unix_socket | default('/var/run/mysqld/mysqld.sock') }}" 
+    priv: "{{ item.priv | default('priv: *.*:USAGE') }}"
+    state: "{{ item.state | default('present') }}"
+    append_privs: "{{ item.append_privs | default('no') }}"
+    encrypted: "{{ item.encrypted | default('no') }}"
+  with_items: "{{ mysql_root_users }}"
+  no_log: true
+  ignore_errors: true
+
+- name: Create Zabbix server MySQL user
+  mysql_user:
+    login_host: "{{ zbx_database_address }}"
+    login_user: "{{ mysql_root_username }}"
+    login_password: "{{ mysql_root_pass }}"
+    name: "{{ zbx_database_name }}"
+    host: "{{ item }}"
+    password: "{{ db_zabbix_pass }}"
+    priv: "{{ zbx_database_name }}.*:ALL"
+    state: present
+  with_items: 
+    - localhost
+    - "{{ zbx_server_address }}"
+    - "{{ zbx_front_address }}"
+    - "{{ zbx_server_ip_ha }}"
+  no_log: true
+
+- name: Create a new database for Zabbix Server
+  mysql_db:
+    name: "{{ zbx_database_name }}"
+    collation: utf8_bin
+    encoding: utf8
+    state: present
+    login_host: "{{ zbx_database_address }}"
+    login_user: "{{ mysql_root_username }}"
+    login_password: "{{ mysql_root_pass }}"

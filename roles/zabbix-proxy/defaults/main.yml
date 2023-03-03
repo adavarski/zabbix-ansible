@@ -1,0 +1,50 @@
+---
+zabbix_hostname: "{{ ansible_hostname }}"
+zabbix_proxy_dbname: zabbix_proxy
+zbx_database_user: zabbix
+zbx_database_address: localhost
+zbx_database_port: 3306
+zbx_user_privileges: localhost
+mysql_zabbix_pass: IiWMnuGlWJo=
+mysql_root_pass: NZaFv3xGTpCK
+zabbix_version: 4.4
+zabbix_server_ip: 127.0.0.1
+mysql_root_username: root
+
+# URL do repo.zabbix.com da versão do Zabbix Release RedHat
+zabbix_repo: zabbix
+zabbix_repo_yum:
+  - name: zabbix
+    description: Zabbix Official Repository - $basearch
+    baseurl: http://repo.zabbix.com/zabbix/{{ zabbix_version }}/rhel/{{ ansible_distribution_major_version }}/$basearch/
+    gpgcheck: 0
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX
+    state: present
+  - name: zabbix-supported
+    description: Zabbix Official Repository non-supported - $basearch
+    baseurl: http://repo.zabbix.com/non-supported/rhel/{{ ansible_distribution_major_version }}/$basearch/
+    gpgcheck: 0
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX
+    state: present 
+
+zabbix_database_creation: True
+zabbix_database_sqlload: True
+path_db_sqlite: sqlite3
+db_mysql: mysql
+# Some role specific vars
+zabbix_proxy_database: sqlite3
+zabbix_proxy_database_long: sqlite3
+# Databases.
+mysql_databases: []
+#   - name: example
+#     collation: utf8_general_ci
+#     encoding: utf8
+#     replicate: 1
+# Users.
+mysql_users: []
+#   - name: example
+#     host: 127.0.0.1
+#     password: secret
+#     priv: *.*:USAGE
+# MySQL
+mysql_repo: https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
