@@ -187,3 +187,7 @@ vagrant halt
 ```
 http://192.168.33.12 - (default) Admin/zabbix
 
+Add this line to /etc/hosts
+```
+192.168.33.12 almalinux-srv.example.com
+```
