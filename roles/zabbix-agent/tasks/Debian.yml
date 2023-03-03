@@ -3,10 +3,10 @@
   set_fact:
     zabbix_short_version: "{{ zabbix_version | regex_replace('\\.', '') }}"
 
-- name: Only run update
-  apt:
-    update_cache: yes
-    upgrade: yes
+#- name: Only run update
+#  apt:
+#    update_cache: yes
+#    upgrade: yes
 
 - name: Install Dependencias
   apt:
