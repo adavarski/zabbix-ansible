@@ -1,4 +1,4 @@
-# Zabbix ansible install
+# Zabbix via ansible installation/setup 
 
 ![Badge](https://img.shields.io/badge/ansible-2.9.10-blue)
 
@@ -11,7 +11,7 @@
 - Almalinux8
 - Centos8
 
-## Zabbix supported versions
+### Zabbix supported versions
 
 |   Zabbix       |  Debian 11 | Ubuntu 20 | Ubuntu 22 | Rocky 8 | Almalinux 8 | Centos 8 |
 |   ----         |     ---    |    ---    |    ---    |   ---   |     ---     |    ---   |
@@ -29,7 +29,7 @@ show variables like '%expire_logs%';
 SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
 ```
 
-## Variables
+### Variables
 | Nome | Descrição | Default | 
 |------|-----------|---------|
 | zabbix_version | zabbix-server version| 4.4|
@@ -42,7 +42,7 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
 | zbx_server_ha | IP zabbix node 2 (6.0 >) | 127.0.0.1
 | zabbix_server_ha | HA (6.0 >) enable|disable | disable
 
-## Example localhost Mysql (DEFAULT)
+### Example localhost Mysql (DEFAULT)
 ```yaml
 ---
 - hosts: all
@@ -52,7 +52,7 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
     - {role: roles/zabbix-server}
     - {role: roles/zabbix-front}
 ```
-## Example localhost postgresql
+### Example localhost postgresql
 ```yaml
 ---
 - hosts: all
@@ -66,7 +66,7 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
     - {role: roles/zabbix-front}
 
 ```
-## Example localhost postgresql version 
+### Example localhost postgresql version 
 ```yaml
 ---
 - hosts: all
@@ -81,7 +81,7 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
     - {role: roles/zabbix-front}
 
 ```
-## Example MySQL on separate server
+### Example MySQL on separate server
 ```yaml
 ---
 - name: Install mysql
@@ -113,7 +113,7 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
   roles:
   - zabbix-front
 ```
-## Example postgresql
+### Example postgresql
 ```yaml
 ---
 - name: Install postgresql
@@ -148,7 +148,7 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
   roles:
   - zabbix-front
 ```
-## HA 6.0
+### HA 6.0 +
 ```yaml
 [db]
 IP-DATABASE ansible_ssh_private_key_file=PATH/private_key ansible_user=vagrant
@@ -159,21 +159,20 @@ IP-ZABBIX_SERVER-NODE2 ansible_ssh_private_key_file=PATH/private_key ansible_use
 IP_FRONT ansible_ssh_private_key_file=PATH/private_key ansible_user=vagrant
 ```
 
-## Execute playbook
+### Execute playbook
 ```
 ansible-playbook -i hosts playbook-zabbix-server.yml --extra-vars "zabbix_version=6.0"
 ```
 
-
-# Zabbix-proxy via ansible 
+## Zabbix-proxy via ansible 
 ==============================
 
-Requerimentos
+### Requerimentos
 ------------
 - ansible 2.9.6
-- Tested on Ubuntu20, Rocky8 e Centos7 
+- Tested on Ubuntu20, Rocky8, Centos7 
 
-Versão Zabbix
+### Zabbix version
 --------------
 To be set in playbook.yml file according to default zabbix-server version 4.4
 
@@ -209,7 +208,7 @@ Important
 -----------------
 There are 2 database_types that will be supported: mysql and sqlite. You will need to enter the variables in the playbook or extra-vars for the database you want to use. Otherwise, it will follow the default, which is SQlite3
 
-Playbook Example
+### Playbook Example
 ----------------
 ```
 ---
@@ -224,7 +223,7 @@ Playbook Example
   become: yes
   
 ```
-Invenary
+### Invenary
 --------------
 ```
 [zabbix-proxy]
@@ -244,15 +243,15 @@ xx.xx.xx.xx ansible_ssh_private_key_file=/Path-Dir/key.pem ansible_user=vagrant
 - Ubuntu20
 - Ubuntu22
 
-## 6.0 related
+### 6.0 related
 
-## Variables
+### Variables
 
 | Nome | Descrição | Default | 
 |------|-----------|---------|
 | zabbix_version | zabbix-server | 4.4|
 | zabbix_hostname | Hostname zabbix-agent | "{{ ansible_hostname }}" |
-| zabbix_hostmetadata | auto-registro | os-linux |
+| zabbix_hostmetadata | auto-registration | os-linux |
 | zabbix_agent2_update | agent2 | False |
 | zabbix_agent2_install | zabbix-agent2  **version 5.0**  | False | 
 | zabbix_agent_update | zabbix-agent 1 | False |
@@ -261,15 +260,15 @@ xx.xx.xx.xx ansible_ssh_private_key_file=/Path-Dir/key.pem ansible_user=vagrant
 | porta_agent2 | port agent2 | 10052 |
 | porta_agent | port agent | 10050 |
 
-## Importante
+### Important
  One or both of **zabbix_agent_install**(DEFAULT) and **zabbix_agent2_install** variables must be selected changing to **True** for the installation process to take place, entering both will install both types on different ports if you want to update only agent version, use **zabbix_agent_update** or **zabbix_agent2_update** variables:
   
   - 10050: **zabbix-agent** 
   - 10052: **zabbix-agent2**  
  
-## Inventory
+### Inventory
 
-## Playbook example
+### Playbook example
 ```yaml
 ---
 - name: Install Zabbix-agent
@@ -284,7 +283,7 @@ xx.xx.xx.xx ansible_ssh_private_key_file=/Path-Dir/key.pem ansible_user=vagrant
   roles:
   - zabbix-agent
 ```
-## Playbook
+### Playbook
 ``` 
 ansible-playbook -i hosts playbook.yml --extra-vars "zabbix_agent_install=True zabbix_version=5.0 zabbix_server_ip=127.0.0.1"
 
