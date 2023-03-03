@@ -177,9 +177,9 @@ ansible-playbook -i hosts playbook-zabbix-server.yml --extra-vars "zabbix_versio
 - Ubuntu20
 - Ubuntu22
 
-## 6.0
+## 6.0 related
 
-## Variáveis
+## Variables
 
 | Nome | Descrição | Default | 
 |------|-----------|---------|
