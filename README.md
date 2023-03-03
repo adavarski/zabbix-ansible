@@ -292,7 +292,7 @@ ansible-playbook -i hosts playbook.yml --extra-vars "zabbix_agent_update=True za
 
 
 
-## Local installation and testing with Vagrant & VirtualBox
+## Local testing with Vagrant & VirtualBox
 
 Pre: Install Vagrant & VirtualBox
 - https://www.vagrantup.com/downloads
@@ -374,7 +374,7 @@ Screenshots:
 <img src="pictures/Zabbix-hosts.png?raw=true" width="900">
 <img src="pictures/Zabbix-node1-system-performance.png?raw=true" width="900">
 
-Clean:
+### Clean:
 ```
 $ sudo dpkg --purge zabbix-agent
 $ sudo rm -rf /etc/zabbix
