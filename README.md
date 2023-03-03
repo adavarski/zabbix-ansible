@@ -180,11 +180,12 @@ vms = {
 #'ubuntu-srv' => {'memory' => '1024', 'cpus' => '2', 'ip' => '14', 'box' => 'ubuntu/focal64'},
 }
 ```
-### Provisioning 
+### Provisioning (vagrant commands)
 ```
 vagrant up 
 vagrant ssh 
 vagrant halt 
+vagrant destroy -f
 ```
 
 ### Add this line to /etc/hosts
