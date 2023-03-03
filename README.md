@@ -2,7 +2,7 @@
 
 ![Badge](https://img.shields.io/badge/ansible-2.9.10-blue)
 
-## OS supported
+## Supported OSs
 
 - Ubuntu20
 - Ubuntu22
@@ -11,7 +11,7 @@
 - Almalinux8
 - Centos8
 
-## zabbix supported versions
+## Zabbix supported versions
 
 |   Zabbix       |  Debian 11 | Ubuntu 20 | Ubuntu 22 | Rocky 8 | Almalinux 8 | Centos 8 |
 |   ----         |     ---    |    ---    |    ---    |   ---   |     ---     |    ---   |
@@ -21,30 +21,26 @@
 |    5.4         |      Yes   |     Yes   |      No   |   Yes   |       Yes   |    Yes   |
 |    6.0         |      Yes   |     Yes   |      Yes  |   Yes   |       Yes   |    Yes   |
 
-Suporte a banco de dados MySQL e Postgresql com timescaledb
+DB: MySQL or Postgresql
 
-Para limitar uso de espaço em disco pelo arquivo de log binlog do mysql que por default é 30 dias para expurgo você pode reduzir no banco com comando abaixo:
+To limit the use of disk space by the mysql binlog log file, which by default is 30 days for purge, you can reduce the database with the command below:
 ```
 show variables like '%expire_logs%';
 SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
 ```
 
-# Como Usar!!!
-
-## Crie o arquivo de inventário hosts 
-
 ## Variables
 | Nome | Descrição | Default | 
 |------|-----------|---------|
-| zabbix_version | Versão zabbix-server | 4.4|
-| postgresql_version | Versao postgresql | 13 |
+| zabbix_version | zabbix-server version| 4.4|
+| postgresql_version | postgresql version | 13 |
 | zabbix_server_database_long |  database[mysql/pgsql] |  mysql
 | zabbix_server_database | database[mysql/pgsql] | mysql
 | zbx_database_address | IP database | 127.0.0.1
 | zbx_front_address | IP front | 127.0.0.1
 | zbx_server_address | IP zabbix | 127.0.0.1
 | zbx_server_ha | IP zabbix node 2 ( 6.0 >) | 127.0.0.1
-| zabbix_server_ha | habilita o HA ( 6.0 >) enable|disable | disable
+| zabbix_server_ha | HA ( 6.0 >) enable|disable | disable
 
 ## Example localhost Mysql (DEFAULT)
 ```yaml
@@ -56,7 +52,7 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
     - {role: roles/zabbix-server}
     - {role: roles/zabbix-front}
 ```
-## Exemple localhost postgresql
+## Example localhost postgresql
 ```yaml
 ---
 - hosts: all
@@ -70,7 +66,7 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
     - {role: roles/zabbix-front}
 
 ```
-## Examle localhost postgresql version 
+## Example localhost postgresql version 
 ```yaml
 ---
 - hosts: all
@@ -165,16 +161,15 @@ IP_FRONT ansible_ssh_private_key_file=PATH/private_key ansible_user=vagrant
 
 ## Execute playbook
 ```
-ansible-playbook -i hosts zabbix.yml --extra-vars "zabbix_version=5.0"
+ansible-playbook -i hosts playbook-zabbix-server.yml --extra-vars "zabbix_version=6.0"
 ```
 
-##  Testing agrant virtualbox
+## Local testing with Vagrant & VBox
 
-## Para instalação: 
 - https://www.vagrantup.com/downloads
 - https://www.virtualbox.org/wiki/Downloads
 
-Vagranfile default rocky 8
+Vagranfile default almalinux 8
 
 ```ruby
 vms = {
@@ -184,13 +179,11 @@ vms = {
 #'ubuntu-srv' => {'memory' => '1024', 'cpus' => '2', 'ip' => '14', 'box' => 'ubuntu/focal64'},
 }
 ```
-*zabbix.yml*  *zabbix_version* default *4.4* 
-
 # UP
 ```
 vagrant up 
 vagrant ssh 
 vagrant halt 
 ```
-http://192.168.33.12 - (default) 
+http://192.168.33.12 - (default) Admin/zabbix
 
