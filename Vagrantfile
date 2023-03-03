@@ -16,7 +16,7 @@ Vagrant.configure('2') do |config|
        #my.disksize.size = '30GB'
        my.vm.network 'private_network', ip: "192.168.33.#{conf['ip']}"
        my.vm.provision "ansible" do |ansible|
-          ansible.playbook = "zabbix.yml"
+          ansible.playbook = "playbook-zabbix-server.yml"
        end
        my.vm.provider 'virtualbox' do |vb|
           vb.memory = conf['memory']
