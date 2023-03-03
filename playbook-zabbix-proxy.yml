@@ -3,6 +3,6 @@
      zabbix_proxy_database: mysql
      zabbix_proxy_database_long: mysql
   roles:
-    - zabbix
+    - zabbix-proxy
   become: true
   
