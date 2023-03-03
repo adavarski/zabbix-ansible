@@ -370,6 +370,7 @@ $ sudo systemctl status zabbix-agent
 ```
 
 Screenshots: 
+
 <img src="pictures/Zabbix-Configuration-Add-host..png?raw=true" width="900">
 <img src="pictures/Zabbix-hosts.png?raw=true" width="900">
 <img src="pictures/Zabbix-node1-system-performance.png?raw=true" width="900">
