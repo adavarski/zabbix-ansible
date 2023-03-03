@@ -193,7 +193,10 @@ Add this line to /etc/hosts
 ```
 
 ```
-vagrant ssh
+$ vagrant ssh
+
+[root@almalinux-srv etc]# pwd
+/etc
 
 [root@almalinux-srv etc]# diff zabbix_server.conf zabbix_server.conf.ORIG
 12c12
