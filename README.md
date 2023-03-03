@@ -191,3 +191,22 @@ Add this line to /etc/hosts
 ```
 192.168.33.12 almalinux-srv.example.com
 ```
+
+```
+vagrant ssh
+
+[root@almalinux-srv etc]# diff zabbix_server.conf zabbix_server.conf.ORIG
+12c12
+< ListenPort=10051
+---
+> # ListenPort=10051
+89c89
+< DBHost=localhost
+---
+> # DBHost=localhost
+125c125
+< DBPassword=Tg0z64OVNzFwNA==
+---
+> # DBPassword=
+
+```
