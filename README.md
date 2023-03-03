@@ -1,4 +1,4 @@
-# Zabbix via Ansible Installation & Setup 
+# Zabbix + Ansible Installation & Setup 
 
 ![Badge](https://img.shields.io/badge/ansible-2.9.10-blue)
 
