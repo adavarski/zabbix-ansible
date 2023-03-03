@@ -209,4 +209,7 @@ vagrant ssh
 ---
 > # DBPassword=
 
+[root@almalinux-srv etc]# systemctl restart zabbix-server
+[root@almalinux-srv etc]# systemctl status zabbix-server
+
 ```
