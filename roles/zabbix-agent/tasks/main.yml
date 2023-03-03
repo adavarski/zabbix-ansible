@@ -21,7 +21,7 @@
     state: present
     line: 'zabbix ALL=NOPASSWD: ALL'
         
-- name: Aplicando config do Zabbix-agentd
+- name: Config Zabbix-agentd
   template:
    src: zabbix_agentd.conf.j2
    dest: /etc/zabbix/zabbix_agentd.conf
@@ -39,7 +39,7 @@
    - zabbix_agent2_update or zabbix_agent2_install
    - zabbix_version is version_compare('5.0', '>=') and zabbix_version is version_compare('6.0', '<')
 
-- name: Config do Zabbix-agent2 v6
+- name: Config Zabbix-agent2 v6
   template:
     src: zabbix_agent2.conf.v6.j2
     dest: /etc/zabbix/zabbix_agent2.conf
