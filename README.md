@@ -164,6 +164,73 @@ IP_FRONT ansible_ssh_private_key_file=PATH/private_key ansible_user=vagrant
 ansible-playbook -i hosts playbook-zabbix-server.yml --extra-vars "zabbix_version=6.0"
 ```
 
+
+# Zabbix-proxy via ansible 
+==============================
+
+Requerimentos
+------------
+- ansible 2.9.6
+- Tested on Ubuntu20, Rocky8 e Centos7 
+
+Versão Zabbix
+--------------
+To be set in playbook.yml file according to default zabbix-server version 4.4
+
+## Variables
+
+| Nome | Descrição | Default | 
+|------|-----------|---------|
+| zabbix_version | zabbix-server | 4.4|
+| zabbix_server_database_long | database[mysql/sqlite3] | sqlite3
+| zabbix_server_database | Tipo de database[mysql/sqlite3] | sqlite3
+| zabbix_server_ip | ip zabbix-server | 127.0.0.1
+
+```
+mysql_databases:
+  - name: "{{ zabbix_proxy_dbname }}"
+    login_password: "{{ mysql_root_pass }}"
+    encoding: utf8
+    collation: utf8_bin
+mysql_users:
+  - login_password: "{{ mysql_root_pass }}"
+    name: "{{ zbx_database_user }}"
+    password: "{{ mysql_zabbix_pass.stdout }}"
+    priv: "{{ zabbix_proxy_dbname }}.*:ALL"
+mysql_root_users:
+  - login_user: root
+    login_password: "" 
+    name: "{{ mysql_root_username }}"
+    password: "{{ mysql_root_pass }}"
+    host: "{{ zbx_user_privileges }}"
+    priv: "*.*:ALL,GRANT"
+```
+Important
+-----------------
+There are 2 database_types that will be supported: mysql and sqlite. You will need to enter the variables in the playbook or extra-vars for the database you want to use. Otherwise, it will follow the default, which is SQlite3
+
+Playbook Example
+----------------
+```
+---
+- hosts: all
+  vars:
+    zabbix_server_ip: 'IP-ZABBIX-SERVER'
+    zabbix_version: 4.4
+    zabbix_proxy_database: mysql or sqlite3 
+    zabbix_proxy_database_long: mysql or sqlite3
+  roles:
+    - zabbix
+  become: yes
+  
+```
+Invenary
+--------------
+```
+[zabbix-proxy]
+xx.xx.xx.xx ansible_ssh_private_key_file=/Path-Dir/key.pem ansible_user=vagrant
+```
+
 ## Zabbix-agent supported OS:
 
 - Amazon1/2
@@ -223,6 +290,7 @@ ansible-playbook -i hosts playbook.yml --extra-vars "zabbix_agent_install=True z
 
 ansible-playbook -i hosts playbook.yml --extra-vars "zabbix_agent_update=True zabbix_version=5.4 zabbix_server_ip=127.0.0.1"
 ``` 
+
 
 
 ## Local installation and testing with Vagrant & VirtualBox
