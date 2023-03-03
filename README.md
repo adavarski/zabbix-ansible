@@ -1,8 +1,8 @@
-# Zabbix ansible
+# Zabbix ansible install
 
 ![Badge](https://img.shields.io/badge/ansible-2.9.10-blue)
 
-## Supported OSs
+## Supported OS
 
 - Ubuntu20
 - Ubuntu22
@@ -39,8 +39,8 @@ SET GLOBAL binlog_expire_logs_seconds = (60*60*24*10);
 | zbx_database_address | IP database | 127.0.0.1
 | zbx_front_address | IP front | 127.0.0.1
 | zbx_server_address | IP zabbix | 127.0.0.1
-| zbx_server_ha | IP zabbix node 2 ( 6.0 >) | 127.0.0.1
-| zabbix_server_ha | HA ( 6.0 >) enable|disable | disable
+| zbx_server_ha | IP zabbix node 2 (6.0 >) | 127.0.0.1
+| zabbix_server_ha | HA (6.0 >) enable|disable | disable
 
 ## Example localhost Mysql (DEFAULT)
 ```yaml
@@ -164,12 +164,13 @@ IP_FRONT ansible_ssh_private_key_file=PATH/private_key ansible_user=vagrant
 ansible-playbook -i hosts playbook-zabbix-server.yml --extra-vars "zabbix_version=6.0"
 ```
 
-## Local testing with Vagrant & VBox
+## Local installation and testing with Vagrant & VirtualBox
 
+Pre: Install Vagrant & VirtualBox
 - https://www.vagrantup.com/downloads
 - https://www.virtualbox.org/wiki/Downloads
 
-Vagranfile default almalinux 8
+Vagranfile -> almalinux 8
 
 ```ruby
 vms = {
@@ -179,7 +180,7 @@ vms = {
 #'ubuntu-srv' => {'memory' => '1024', 'cpus' => '2', 'ip' => '14', 'box' => 'ubuntu/focal64'},
 }
 ```
-# UP
+### Provisioning 
 ```
 vagrant up 
 vagrant ssh 
@@ -187,7 +188,7 @@ vagrant halt
 ```
 http://192.168.33.12 - (default) Admin/zabbix
 
-Add this line to /etc/hosts
+### Add this line to /etc/hosts
 ```
 192.168.33.12 almalinux-srv.example.com
 ```
@@ -215,6 +216,7 @@ $ vagrant ssh
 [root@almalinux-srv etc]# systemctl restart zabbix-server
 [root@almalinux-srv etc]# systemctl status zabbix-server
 
+### Install zabbix-agent on Vagrant host
 $ ansible-playbook -i inventory -l zabbix-agents playbook-zabbix-agent.yml --extra-vars "zabbix_agent_update=True zabbix_version=6.0 zabbix_server_ip=192.168.33.12"
 $ diff /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.ORIG
 102c102
@@ -235,6 +237,8 @@ $ sudo mkdir /etc/zabbix/zabbix_agentd.d
 $ sudo systemctl restart zabbix-agent
 $ sudo systemctl status zabbix-agent
 ```
+
+Screenshots: 
 <img src="pictures/Zabbix-Configuration-Add-host..png?raw=true" width="900">
 <img src="pictures/Zabbix-hosts.png?raw=true" width="900">
 <img src="pictures/Zabbix-node1-system-performance.png?raw=true" width="900">
