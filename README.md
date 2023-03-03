@@ -369,7 +369,7 @@ $ sudo systemctl restart zabbix-agent
 $ sudo systemctl status zabbix-agent
 ```
 
-Screenshots: 
+### Screenshots: 
 
 <img src="pictures/Zabbix-Configuration-Add-host..png?raw=true" width="900">
 <img src="pictures/Zabbix-hosts.png?raw=true" width="900">
@@ -382,5 +382,5 @@ $ sudo rm -rf /etc/zabbix
 $ vagrant destroy -f
 ==> almalinux-srv: Forcing shutdown of VM...
 ==> almalinux-srv: Destroying VM and associated drives...
-
+$ vagrant box remove almalinux/8
 ```
