@@ -2,7 +2,7 @@
 
 ![Badge](https://img.shields.io/badge/ansible-2.9.10-blue)
 
-## Supported OS
+## Zabbix Server : Supported OS
 
 - Ubuntu20
 - Ubuntu22
@@ -163,6 +163,67 @@ IP_FRONT ansible_ssh_private_key_file=PATH/private_key ansible_user=vagrant
 ```
 ansible-playbook -i hosts playbook-zabbix-server.yml --extra-vars "zabbix_version=6.0"
 ```
+
+## Zabbix-agent supported OS:
+
+- Amazon1/2
+- CentOS6
+- CentOS7
+- CentOs8
+- Rocky8
+- Debian10
+- Debian11 
+- Ubuntu18
+- Ubuntu20
+- Ubuntu22
+
+## 6.0
+
+## Variáveis
+
+| Nome | Descrição | Default | 
+|------|-----------|---------|
+| zabbix_version | zabbix-server | 4.4|
+| zabbix_hostname | Hostname zabbix-agent | "{{ ansible_hostname }}" |
+| zabbix_hostmetadata | auto-registro | os-linux |
+| zabbix_agent2_update | agent2 | False |
+| zabbix_agent2_install | zabbix-agent2  **version 5.0**  | False | 
+| zabbix_agent_update | zabbix-agent 1 | False |
+| zabbix_agent_install | zabbix-agent 1 | False | 
+| zabbix_server_ip | IP zabbix-server | 127.0.0.1| 
+| porta_agent2 | port agent2 | 10052 |
+| porta_agent | port agent | 10050 |
+
+## Importante
+ One or both of **zabbix_agent_install**(DEFAULT) and **zabbix_agent2_install** variables must be selected changing to **True** for the installation process to take place, entering both will install both types on different ports if you want to update only agent version, use **zabbix_agent_update** or **zabbix_agent2_update** variables:
+  
+  - 10050: **zabbix-agent** 
+  - 10052: **zabbix-agent2**  
+ 
+## Inventory
+
+## Playbook example
+```yaml
+---
+- name: Install Zabbix-agent
+  hosts: all
+  vars:
+    zabbix_server_ip: 'IP-SERVER'
+    zabbix_version: 4.4
+    zabbix_agent_install ou zabbix_agent2_install: True
+    ### Update variables only when updating
+    zabbix_agent_update ou zabbix_update2_install: True
+  become: true
+  roles:
+  - zabbix-agent
+```
+## Playbook
+``` 
+ansible-playbook -i hosts playbook.yml --extra-vars "zabbix_agent_install=True zabbix_version=5.0 zabbix_server_ip=127.0.0.1"
+
+ansible-playbook -i hosts playbook.yml --extra-vars "zabbix_agent_update=True zabbix_version=5.4 zabbix_server_ip=127.0.0.1"
+``` 
+
 
 ## Local installation and testing with Vagrant & VirtualBox
 
