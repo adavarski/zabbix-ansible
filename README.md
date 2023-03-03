@@ -374,3 +374,12 @@ Screenshots:
 <img src="pictures/Zabbix-hosts.png?raw=true" width="900">
 <img src="pictures/Zabbix-node1-system-performance.png?raw=true" width="900">
 
+Clean:
+```
+$ sudo dpkg --purge zabbix-agent
+$ sudo rm -rf /etc/zabbix
+$ vagrant destroy -f
+==> almalinux-srv: Forcing shutdown of VM...
+==> almalinux-srv: Destroying VM and associated drives...
+
+```
