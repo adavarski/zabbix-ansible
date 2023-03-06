@@ -170,7 +170,7 @@ ansible-playbook -i hosts playbook-zabbix-server.yml --extra-vars "zabbix_versio
 ### Requerimentos
 ------------
 - ansible 2.9.6
-- Tested on Ubuntu20, Rocky8, Centos7 
+- Tested on Ubuntu20, Rocky8, Centos7, Almalinux8
 
 ### Zabbix version
 --------------
@@ -237,6 +237,7 @@ xx.xx.xx.xx ansible_ssh_private_key_file=/Path-Dir/key.pem ansible_user=vagrant
 - CentOS7
 - CentOs8
 - Rocky8
+- Almalinux8
 - Debian10
 - Debian11 
 - Ubuntu18
