@@ -385,3 +385,6 @@ $ vagrant destroy -f
 ==> almalinux-srv: Destroying VM and associated drives...
 $ vagrant box remove almalinux/8
 ```
+
+
+TODO: Partitionig DB (2000+ hosts -> 1 year retention -> 50GB per day)
