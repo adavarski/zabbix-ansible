@@ -387,4 +387,6 @@ $ vagrant box remove almalinux/8
 ```
 
 
-### TODO: Partitionig DB (2000+ hosts -> 1 year retention -> 50GB per day)
+### TODO: 
+- Partitionig DB (2000+ hosts -> 1 year retention -> 50GB per day)
+- SQL scripts for host utilization
